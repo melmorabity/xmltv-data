@@ -1,0 +1,107 @@
+---
+name: Generate XMLTV data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2,6,10,14,18,22 * * *'
+
+jobs:
+  xmltv_bouyguestelecom:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out melmorabity/tv_grab_fr_bouyguestelecom repository
+        uses: actions/checkout@v2
+        with:
+          repository: melmorabity/tv_grab_fr_bouyguestelecom
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+      - name: Configure grabber
+        run: |
+          mkdir -p ~/.xmltv/
+          for c in $channels; do
+              echo "channel=$c.bouyguestelecom.fr" >>~/.xmltv/tv_grab_fr_bouyguestelecom.conf
+          done
+        env:
+          channels: 866 1353 1258 1452 1061 842 561 116 524 1095
+      - name: Run grabber
+        run: python tv_grab_fr_bouyguestelecom.py --days 7 --output xmltv_bouyguestelecom.xml --debug
+        env:
+          TZ: Europe/Paris
+      - name: Upload XMLTV file
+        uses: actions/upload-artifact@v2
+        with:
+          name: xmltv_bouyguestelecom
+          path: xmltv_bouyguestelecom.xml
+
+  xmltv_teleloisirs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out melmorabity/tv_grab_fr_teleloisirs repository
+        uses: actions/checkout@v2
+        with:
+          repository: melmorabity/tv_grab_fr_teleloisirs
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+      - name: Configure grabber
+        run: |
+          mkdir -p ~/.xmltv/
+          for c in $channels; do
+              echo "channel=$c.api-tel.programme-tv.net" >>~/.xmltv/tv_grab_fr_teleloisirs.conf
+          done
+        env:
+          channels: 192 4 80 34 47 118 681 445 119 195 446 444 234 78 481 226 458 482 1404 1401 1403 1402 1400 1399 112 2111 145 225 191 115 205 121 451 88 1539 563 605 325 64 15 1996 140 529 1073 992 781
+      - name: Run grabber
+        run: python tv_grab_fr_teleloisirs.py --days 7 --output xmltv_teleloisirs.xml
+        env:
+          TZ: Europe/Paris
+      - name: Upload XMLTV file
+        uses: actions/upload-artifact@v2
+        with:
+          name: xmltv_teleloisirs
+          path: xmltv_teleloisirs.xml
+
+  xmltv:
+    needs:
+      - xmltv_bouyguestelecom
+      - xmltv_teleloisirs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Download Bouygues Telecom XMLTV file
+        uses: actions/download-artifact@v2
+        with:
+          name: xmltv_bouyguestelecom
+          path: .
+      - name: Download Télé Loisirs XMLTV file
+        uses: actions/download-artifact@v2
+        with:
+          name: xmltv_teleloisirs
+          path: .
+      - name: Merge XMLTV data
+        run: |
+          cat <<EOF >xmltv.xml
+          <?xml version="1.0" encoding="UTF-8"?>
+          <tv>
+          EOF
+          sed -n "/<channel .*>/,/<\/channel>/p" xmltv_bouyguestelecom.xml xmltv_teleloisirs.xml >>xmltv.xml
+          sed -n "/<programme .*>/,/<\/programme>/p" xmltv_bouyguestelecom.xml xmltv_teleloisirs.xml >>xmltv.xml
+          echo "</tv>" >>xmltv.xml
+      - name: Add XMLTV file to repository
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions"
+          git add xmltv.xml
+          if ! git diff-index --cached --quiet HEAD --; then
+              git commit -m "$(date)"
+              git push
+          fi
