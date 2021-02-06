@@ -27,7 +27,7 @@ jobs:
               echo "channel=$c.bouyguestelecom.fr" >>~/.xmltv/tv_grab_fr_bouyguestelecom.conf
           done
         env:
-          channels: 866 1353 1258 1452 1061 842 561 116 524 1095
+          channels: 866 1353 1258 1452 1061 842 561 116 524 1095 3163
       - name: Run grabber
         run: python tv_grab_fr_bouyguestelecom.py --days 7 --output xmltv_bouyguestelecom.xml --debug
         env:
