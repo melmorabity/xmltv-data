@@ -27,7 +27,7 @@ jobs:
               echo "channel=$c.bouyguestelecom.fr" >>~/.xmltv/tv_grab_fr_bouyguestelecom.conf
           done
         env:
-          channels: 866 1353 1258 1452 1061 842 561 116 524 1095 3163
+          channels: 866 1353 1258 1452 1061 842 561
       - name: Run grabber
         run: python tv_grab_fr_bouyguestelecom.py --days 7 --output xmltv_bouyguestelecom.xml --debug
         env:
@@ -58,7 +58,7 @@ jobs:
               echo "channel=$c.api-tel.programme-tv.net" >>~/.xmltv/tv_grab_fr_teleloisirs.conf
           done
         env:
-          channels: 192 4 80 34 47 118 681 445 119 195 446 444 234 78 481 226 458 482 1404 1401 1403 1402 1400 1399 112 2111 145 225 191 115 205 121 451 88 1539 563 605 325 64 15 1996 140 529 1073 992 781
+          channels: 192 4 80 34 47 118 681 445 119 195 446 444 234 78 481 226 458 482 3163 1404 1401 1403 1402 1400 1399 112 2111 145 225 191 115 205 121 451 88 1539 563 605 325 64 15 1996 140 529 1073 992 781 116 524 1095
       - name: Run grabber
         run: python tv_grab_fr_teleloisirs.py --days 7 --output xmltv_teleloisirs.xml
         env:
